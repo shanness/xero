@@ -20,12 +20,12 @@ This is a simple project to show you how to use Java to access your Xero data vi
 This project uses the 2-legged OAuth approach (OAuth 1.1a),
 referred to by the Xero API as Private Applications.
 
-##Step 1:  Setup a Xero application
+###Step 1:  Setup a Xero application
 
 Follow the instructions here:
 http://blog.xero.com/developer/api-overview/setup-an-application/#private-apps
 
-##Step 2:  Add your private key, consumer key and secret
+###Step 2:  Add your private key, consumer key and secret
 
 Put your private key into: privateKey.pem
 Put your consumerKey and consumerSecret into: xeroApi.properties
@@ -39,7 +39,7 @@ consumerSecret=XXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 privateKeyFile=./privateKey.pem
 ```
 
-##Step 3:  Get the Schemas
+###Step 3:  Get the Schemas
 
 Start with the modified Xero API schemas here:
 https://github.com/rossjourdain/XeroAPI-Schemas
@@ -47,11 +47,11 @@ https://github.com/rossjourdain/XeroAPI-Schemas
 They should be up to date but if not, you can get the latest Xero API schemas here:
 https://github.com/XeroAPI/XeroAPI-Schemas
 
-##Step 4:  git clone http://github.com/indykish/xero.git
+###Step 4:  git clone http://github.com/indykish/xero.git
 
-##Step 5:  Add the schemas to src/main/resources/XeroSchemas/v2.00/
+###Step 5:  Add the schemas to src/main/resources/XeroSchemas/v2.00/
 
-##Step 6:  When mvn compile is executed the XeroSchemas/v2.00 xsd files are converted to Java classes.
+###Step 6:  When mvn compile is executed the XeroSchemas/v2.00 xsd files are converted to Java classes.
 
 This project uses the following projects:
 
@@ -87,12 +87,12 @@ This is a simple project to show you how to use Java to access your Xero data vi
 This project uses the 3-legged OAuth approach (OAuth 1.1a),
 referred to by the Xero API as Public Application.
 
-##Step 1:  Setup a Xero application
+###Step 1:  Setup a Xero application
 
 Follow the instructions here:
 http://blog.xero.com/developer/api-overview/setup-an-application/#public-apps
 
-#Step 2:  Generate an OAuth access token (If you wish to test API access with Xero using standalone mode)
+###Step 2:  Generate an OAuth access token (If you wish to test API access with Xero using standalone mode)
 
 You can use the xerorails project to generate one.
 
@@ -102,7 +102,7 @@ git clone https://github.com/indykish/xerorails.git
 Follow the instructions to as seen in xerorails to generate an access_token.
 '''
 
-#Step 3:  Add your consumer key and secret
+###Step 3:  Add your consumer key and secret
 
 Put your consumerKey and consumerSecret, oauth_token, oauth_verifier, oauth_token_secret into: xeroApi.properties
 
@@ -117,7 +117,7 @@ authorizationUrl=https://api.xero.com/oauth/Authorize
 accessUrl=https://api.xero.com/oauth/AccessToken
 ```
 
-##Step 3:  Get the Schemas
+###Step 4:  Get the Schemas
 
 Start with the modified Xero API schemas here:
 https://github.com/rossjourdain/XeroAPI-Schemas
@@ -125,10 +125,10 @@ https://github.com/rossjourdain/XeroAPI-Schemas
 They should be up to date but if not, you can get the latest Xero API schemas here:
 https://github.com/XeroAPI/XeroAPI-Schemas
 
-##Step 4:  git clone http://github.com/indykish/xero.git
+###Step 5:  git clone http://github.com/indykish/xero.git
 
-##Step 5:  Add the schemas to src/main/resources/XeroSchemas/v2.00/
+###Step 6:  Add the schemas to src/main/resources/XeroSchemas/v2.00/
 
-##Step 6:  When mvn compile is executed the XeroSchemas/v2.00 xsd files are converted to Java classes.
+When mvn compile is executed the XeroSchemas/v2.00 xsd files are converted to Java classes.
 
-##Step 7:  The class com.rossjourdain.util.XeroPublicClient should be used to interface with Xero.
+The class com.rossjourdain.util.XeroPublicClient should be used to interface with Xero.
