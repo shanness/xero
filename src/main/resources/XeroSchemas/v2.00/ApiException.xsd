@@ -1,0 +1,16 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<xs:schema id="ApiException"
+    elementFormDefault="qualified"
+    xmlns:xs="http://www.w3.org/2001/XMLSchema"
+>
+
+  <!-- API Exception -->
+  <xs:complexType name="ApiException">
+    <xs:all>
+      <xs:element name="ErrorNumber" type="xs:integer" minOccurs="1" maxOccurs="1" />
+      <xs:element name="Type" type="xs:string" minOccurs="1" maxOccurs="1" />
+      <xs:element name="Message" type="xs:string" minOccurs="1" maxOccurs="1" />
+    </xs:all>
+  </xs:complexType>
+  
+</xs:schema>

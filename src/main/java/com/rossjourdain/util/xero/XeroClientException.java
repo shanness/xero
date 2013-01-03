@@ -17,12 +17,17 @@
  */
 package com.rossjourdain.util.xero;
 
-import com.sun.xml.internal.ws.streaming.DOMStreamReader;
+
 import java.util.List;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBElement;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Unmarshaller;
+import javax.xml.stream.XMLInputFactory;
+import javax.xml.stream.XMLStreamException;
+import javax.xml.stream.XMLStreamReader;
+import javax.xml.transform.dom.DOMSource;
+
 import net.oauth.OAuthProblemException;
 import org.w3c.dom.Element;
 
@@ -78,18 +83,21 @@ public class XeroClientException extends Exception {
       JAXBContext context = JAXBContext.newInstance(ResponseType.class);
       Unmarshaller unmarshaller = context.createUnmarshaller();
 
-      // unmarshaller.setEventHandler(new DefaultValidationEventHandler());
+      XMLInputFactory f = XMLInputFactory.newInstance();
+      XMLStreamReader r = f.createXMLStreamReader(new DOMSource(e));
+      
+     // unmarshaller.setEventHandler(new DefaultValidationEventHandler());
 
       JAXBElement jaxbElement = null;
 
       if ("Invoice".equals(elementType)) {
-        jaxbElement = unmarshaller.unmarshal(new DOMStreamReader(e), Invoice.class);
+        jaxbElement = unmarshaller.unmarshal(r, Invoice.class);
         modelObject = (Invoice) jaxbElement.getValue();
       } else if ("Payment".equals(elementType)) {
-        jaxbElement = unmarshaller.unmarshal(new DOMStreamReader(e), Payment.class);
+        jaxbElement = unmarshaller.unmarshal(r, Payment.class);
         modelObject = (Payment) jaxbElement.getValue();
       } else if ("Contact".equals(elementType)) {
-        jaxbElement = unmarshaller.unmarshal(new DOMStreamReader(e), Contact.class);
+        jaxbElement = unmarshaller.unmarshal(r, Contact.class);
         modelObject = (Contact) jaxbElement.getValue();
       } else {
         throw new RuntimeException("Unrecognised type: " + elementType);
@@ -106,7 +114,7 @@ public class XeroClientException extends Exception {
         }
       }
 
-    } catch (JAXBException ex) {
+    } catch (JAXBException | XMLStreamException ex) {
       ex.printStackTrace();
     }
 

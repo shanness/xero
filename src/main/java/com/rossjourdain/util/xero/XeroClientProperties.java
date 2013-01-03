@@ -27,6 +27,8 @@ import java.io.Reader;
 import java.util.InvalidPropertiesFormatException;
 import java.util.Properties;
 
+import net.oauth.OAuth;
+
 /**
  *
  * @author ross
@@ -37,10 +39,22 @@ public class XeroClientProperties extends Properties {
     private static final String CONSUMER_KEY = "consumerKey";
     private static final String CONSUMER_SECRET = "consumerSecret";
     private static final String PRIVATE_KEY_FILE = "privateKeyFile";
+    
+    private static final String REQUEST_URL = "requestUrl";
+    private static final String AUTH_URL = "authorizationUrl";
+    private static final String ACCESS_URL = "accessUrl";
+    
+    
     private String endpointUrl;
     private String consumerKey;
     private String consumerSecret;
     private String privateKey;
+	private String requestUrl;
+	private String authUrl;
+	private String accessUrl;
+	private String oauth_token;
+	private String oauth_token_secret;
+	private String oauth_token_verifier;
 
     @Override
     public synchronized void load(InputStream inStream) throws IOException {
@@ -65,6 +79,14 @@ public class XeroClientProperties extends Properties {
         endpointUrl = getProperty(ENDPOINT_URL);
         consumerKey = getProperty(CONSUMER_KEY);
         consumerSecret = getProperty(CONSUMER_SECRET);
+        
+        oauth_token = getProperty(OAuth.OAUTH_TOKEN);
+        oauth_token_verifier= getProperty(OAuth.OAUTH_VERIFIER);
+        oauth_token_secret=getProperty(OAuth.OAUTH_TOKEN_SECRET);
+        
+        requestUrl = getProperty(REQUEST_URL);
+        authUrl= getProperty(AUTH_URL);
+        accessUrl=getProperty(ACCESS_URL);
 
         File file = new File(getProperty(PRIVATE_KEY_FILE));
         BufferedReader reader = new BufferedReader(new FileReader(file));
@@ -92,4 +114,46 @@ public class XeroClientProperties extends Properties {
     public String getPrivateKey() {
         return privateKey;
     }
+
+	/**
+	 * @return
+	 */
+	public String getRequestURL() {
+		return requestUrl;
+	}
+
+	/**
+	 * @return
+	 */
+	public String getAuthURL() {
+		return authUrl;
+	}
+
+	/**
+	 * @return
+	 */
+	public String getAccessURL() {
+		return accessUrl;
+	}
+	
+	/**
+	 * @return
+	 */
+	public String getOAuthToken() {
+		return oauth_token;
+	}
+
+	/**
+	 * @return
+	 */
+	public String getOAuthTokenSecret() {
+		return oauth_token_secret;
+	}
+
+	/**
+	 * @return
+	 */
+	public String getOAuthTokenVerifier() {
+		return oauth_token_verifier;
+	}
 }
