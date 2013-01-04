@@ -30,7 +30,7 @@ public class XeroPublicClientTest {
     	XeroClientProperties clientProperties = new XeroClientProperties();
         clientProperties.load(new FileInputStream("./xeroApi.properties"));          	
 		XeroPublicClient pc=new XeroPublicClient(clientProperties);
-		System.out.println(XeroXmlManager.invoicesToXml(pc.getInvoices()));
+		//System.out.println(XeroXmlManager.invoicesToXml(pc.getInvoices()));
 		
 	}
 }

@@ -143,7 +143,7 @@ public class XeroXmlManager {
             StringWriter stringWriter = new StringWriter();
             marshaller.marshal(element, stringWriter);
             invoicesString = stringWriter.toString();
-
+            System.out.println(invoicesString);
         } catch (JAXBException ex) {
             ex.printStackTrace();
         }

@@ -46,8 +46,7 @@ public class App {
 
             ArrayOfInvoice arrayOfExistingInvoices = xeroClient.getInvoices();
             if (arrayOfExistingInvoices != null && arrayOfExistingInvoices.getInvoice() != null) {
-
-                System.out.println("");
+                
                 for (Invoice invoice : arrayOfExistingInvoices.getInvoice()) {
                     System.out.println("Invoice: " + invoice.getInvoiceID());
                 }

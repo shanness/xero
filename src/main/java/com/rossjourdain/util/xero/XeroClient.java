@@ -21,7 +21,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.List;
+
 import net.oauth.OAuth;
 import net.oauth.OAuthAccessor;
 import net.oauth.OAuthConsumer;
@@ -30,7 +30,7 @@ import net.oauth.OAuthProblemException;
 import net.oauth.ParameterStyle;
 import net.oauth.client.OAuthClient;
 import net.oauth.client.OAuthResponseMessage;
-import net.oauth.client.httpclient3.HttpClient3;
+import net.oauth.client.httpclient4.HttpClient4;
 import net.oauth.signature.RSA_SHA1;
 
 /**
@@ -68,12 +68,12 @@ public class XeroClient {
         accessor.tokenSecret = consumerSecret;
 
         return accessor;
-    }
+    }    
 
     public ArrayOfInvoice getInvoices() throws XeroClientException, XeroClientUnexpectedException {
         ArrayOfInvoice arrayOfInvoices = null;
         try {
-            OAuthClient client = new OAuthClient(new HttpClient3());
+            OAuthClient client = new OAuthClient(new HttpClient4());
             OAuthAccessor accessor = buildAccessor();
             OAuthMessage response = client.invoke(accessor, OAuthMessage.GET, endpointUrl + "Invoices", null);
             arrayOfInvoices = XeroXmlManager.xmlToInvoices(response.getBodyAsStream());
@@ -88,7 +88,7 @@ public class XeroClient {
     public Report getReport(String reportUrl) throws XeroClientException, XeroClientUnexpectedException {
         Report report = null;
         try {
-            OAuthClient client = new OAuthClient(new HttpClient3());
+            OAuthClient client = new OAuthClient(new HttpClient4());
             OAuthAccessor accessor = buildAccessor();
             OAuthMessage response = client.invoke(accessor, OAuthMessage.GET, endpointUrl + "Reports" + reportUrl, null);
             ResponseType responseType = XeroXmlManager.xmlToResponse(response.getBodyAsStream());
@@ -107,7 +107,7 @@ public class XeroClient {
     public void postContacts(ArrayOfContact arrayOfContact) throws XeroClientException, XeroClientUnexpectedException {
         try {
             String contactsString = XeroXmlManager.contactsToXml(arrayOfContact);
-            OAuthClient client = new OAuthClient(new HttpClient3());
+            OAuthClient client = new OAuthClient(new HttpClient4());
             OAuthAccessor accessor = buildAccessor();
             OAuthMessage response = client.invoke(accessor, OAuthMessage.POST, endpointUrl + "Contacts", OAuth.newList("xml", contactsString));
         } catch (OAuthProblemException ex) {
@@ -119,7 +119,7 @@ public class XeroClient {
 
     public void postInvoices(ArrayOfInvoice arrayOfInvoices) throws XeroClientException, XeroClientUnexpectedException {
         try {
-            OAuthClient client = new OAuthClient(new HttpClient3());
+            OAuthClient client = new OAuthClient(new HttpClient4());
             OAuthAccessor accessor = buildAccessor();
             String contactsString = XeroXmlManager.invoicesToXml(arrayOfInvoices);
             OAuthMessage response = client.invoke(accessor, OAuthMessage.POST, endpointUrl + "Invoices", OAuth.newList("xml", contactsString));
@@ -132,7 +132,7 @@ public class XeroClient {
 
     public void postPayments(ArrayOfPayment arrayOfPayment) throws XeroClientException, XeroClientUnexpectedException {
         try {
-            OAuthClient client = new OAuthClient(new HttpClient3());
+            OAuthClient client = new OAuthClient(new HttpClient4());
             OAuthAccessor accessor = buildAccessor();
             String paymentsString = XeroXmlManager.paymentsToXml(arrayOfPayment);
             OAuthMessage response = client.invoke(accessor, OAuthMessage.POST, endpointUrl + "Payments", OAuth.newList("xml", paymentsString));
@@ -151,7 +151,7 @@ public class XeroClient {
 
         try {
 
-            OAuthClient client = new OAuthClient(new HttpClient3());
+            OAuthClient client = new OAuthClient(new HttpClient4());
             OAuthAccessor accessor = buildAccessor();
 
             OAuthMessage request = accessor.newRequestMessage(OAuthMessage.GET, endpointUrl + "Invoices" + "/" + invoiceId, null);

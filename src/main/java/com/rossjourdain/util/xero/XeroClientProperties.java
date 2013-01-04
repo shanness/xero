@@ -88,14 +88,14 @@ public class XeroClientProperties extends Properties {
         authUrl= getProperty(AUTH_URL);
         accessUrl=getProperty(ACCESS_URL);
 
-        File file = new File(getProperty(PRIVATE_KEY_FILE));
+        /*File file = new File(getProperty(PRIVATE_KEY_FILE));
         BufferedReader reader = new BufferedReader(new FileReader(file));
         StringBuilder stringBuilder = new StringBuilder();
         String line = null;
         while ((line = reader.readLine()) != null) {
             stringBuilder.append(line).append("\n");
         }
-        privateKey = stringBuilder.toString();
+        privateKey = stringBuilder.toString();*/
 
     }
 
