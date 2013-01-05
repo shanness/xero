@@ -35,25 +35,30 @@ import net.oauth.OAuthProblemException;
  * @author ross
  */
 public class XeroXmlManager {
-
-    public static ArrayOfInvoice xmlToInvoices(InputStream invoiceStream) {
-
-        ArrayOfInvoice arrayOfInvoices = null;
-
+    /**
+     * This method converts a given Xml InputStream to ResponseType
+     * this method unmarshall the given InputStream.  
+     * @param inputStream
+     * @return
+     */
+    public static ResponseType fromXml(InputStream inputStream) {
+        ResponseType response = null;
         try {
             JAXBContext context = JAXBContext.newInstance(ResponseType.class);
             Unmarshaller unmarshaller = context.createUnmarshaller();
-            JAXBElement<ResponseType> element = unmarshaller.unmarshal(new StreamSource(invoiceStream), ResponseType.class);
-            ResponseType response = element.getValue();
-            arrayOfInvoices = response.getInvoices();
-
+            JAXBElement<ResponseType> element = unmarshaller.unmarshal(new StreamSource(inputStream), ResponseType.class);
+            response = element.getValue();
         } catch (JAXBException ex) {
             ex.printStackTrace();
         }
 
-        return arrayOfInvoices;
+        return response;
     }
-
+    /**
+     * 
+     * @param responseStream
+     * @return
+     */
     public static ResponseType xmlToResponse(InputStream responseStream) {
 
         ResponseType response = null;
@@ -70,7 +75,11 @@ public class XeroXmlManager {
 
         return response;
     }
-
+    /**
+     * This method returns exceptipon from xero
+     * @param exceptionString
+     * @return
+     */
     public static ApiExceptionExtended xmlToException(String exceptionString) {
 
         ApiExceptionExtended apiException = null;
@@ -102,76 +111,144 @@ public class XeroXmlManager {
 
         return oAuthProblemExceptionString;
     }
-
+    /**
+     * This method converts given contact input details to xml data 
+     * by using JAXBElement.
+     * @param arrayOfContacts
+     * @return
+     */
     public static String contactsToXml(ArrayOfContact arrayOfContacts) {
 
-        String contactsString = null;
-
-        try {
-
-            JAXBContext context = JAXBContext.newInstance(ResponseType.class);
-            Marshaller marshaller = context.createMarshaller();
-            marshaller.setProperty("com.sun.xml.bind.xmlDeclaration", Boolean.FALSE);
-
-            ObjectFactory factory = new ObjectFactory();
-            JAXBElement<ArrayOfContact> element = factory.createContacts(arrayOfContacts);
-
-            StringWriter stringWriter = new StringWriter();
-            marshaller.marshal(element, stringWriter);
-            contactsString = stringWriter.toString();
-
-        } catch (JAXBException ex) {
-            ex.printStackTrace();
-        }
-
-        return contactsString;
+    	String invoicesString = null;
+        ObjectFactory factory = new ObjectFactory();
+		JAXBElement<ArrayOfContact> element = factory.createContacts(arrayOfContacts);
+		invoicesString=XeroXmlManager.marshall(element);
+		System.out.println(invoicesString);
+        return invoicesString;
     }
-
+    /**
+     * This method converts given invoice input details to xml data 
+     * by using JAXBElement.
+     */
     public static String invoicesToXml(ArrayOfInvoice arrayOfInvoices) {
 
         String invoicesString = null;
-
-        try {
-
-            JAXBContext context = JAXBContext.newInstance(ResponseType.class);
-            Marshaller marshaller = context.createMarshaller();
-            marshaller.setProperty("com.sun.xml.bind.xmlDeclaration", Boolean.FALSE);
-
-            ObjectFactory factory = new ObjectFactory();
-            JAXBElement<ArrayOfInvoice> element = factory.createInvoices(arrayOfInvoices);
-
-            StringWriter stringWriter = new StringWriter();
-            marshaller.marshal(element, stringWriter);
-            invoicesString = stringWriter.toString();
-            System.out.println(invoicesString);
-        } catch (JAXBException ex) {
-            ex.printStackTrace();
-        }
-
+        ObjectFactory factory = new ObjectFactory();
+		JAXBElement<ArrayOfInvoice> element = factory.createInvoices(arrayOfInvoices);
+		invoicesString=XeroXmlManager.marshall(element);
+		System.out.println(invoicesString);
         return invoicesString;
     }
+    /**
+     * This method converts given account input details to xml data 
+     * by using JAXBElement.
+     */
+    public static String accountsToXml(ArrayOfAccount arrayOfAccount) {
 
+        String invoicesString = null;
+        ObjectFactory factory = new ObjectFactory();
+        JAXBElement<ArrayOfAccount> element = factory.createAccounts(arrayOfAccount);
+        invoicesString=XeroXmlManager.marshall(element);
+        System.out.println(invoicesString);
+        return invoicesString;
+    }
+    /**
+     * This method converts given payments input details to xml data 
+     * by using JAXBElement. 
+     * @param arrayOfPayment
+     * @return
+     */
     public static String paymentsToXml(ArrayOfPayment arrayOfPayment) {
 
-        String paymentsString = null;
+    	String invoicesString = null;
+        ObjectFactory factory = new ObjectFactory();
+		JAXBElement<ArrayOfPayment> element = factory.createPayments(arrayOfPayment);
+		invoicesString=XeroXmlManager.marshall(element);
+		System.out.println(invoicesString);
+        return invoicesString;
+    }
+    /**
+     * This method converts given employees input details to xml data 
+     * by using JAXBElement.
+     * @param arrayOfEmployee
+     * @return
+     */
+    public static String employeesToXml(ArrayOfEmployee arrayOfEmployee) {
 
-        try {
+    	String invoicesString = null;
+        ObjectFactory factory = new ObjectFactory();
+		JAXBElement<ArrayOfEmployee> element = factory.createEmployees(arrayOfEmployee);
+		invoicesString=XeroXmlManager.marshall(element);
+		System.out.println(invoicesString);
+        return invoicesString;
+    }
+    /**
+     * This method converts given receipts input details to xml data 
+     * by using JAXBElement.
+     * @param arrayOfReceipt
+     * @return
+     */
+    public static String receiptsToXml(ArrayOfReceipt arrayOfReceipt) {
 
-            JAXBContext context = JAXBContext.newInstance(ResponseType.class);
-            Marshaller marshaller = context.createMarshaller();
-            marshaller.setProperty("com.sun.xml.bind.xmlDeclaration", Boolean.FALSE);
+    	String invoicesString = null;
+        ObjectFactory factory = new ObjectFactory();
+		JAXBElement<ArrayOfReceipt> element = factory.createReceipts(arrayOfReceipt);
+		invoicesString=XeroXmlManager.marshall(element);
+		System.out.println(invoicesString);
+        return invoicesString;
+    }
+    /**
+     * This method converts given item input details to xml data 
+     * by using JAXBElement.
+     * @param arrayOfItem
+     * @return
+     */
+    public static String itemsToXml(ArrayOfItem arrayOfItem) {
 
-            ObjectFactory factory = new ObjectFactory();
-            JAXBElement<ArrayOfPayment> element = factory.createPayments(arrayOfPayment);
+    	String invoicesString = null;
+        ObjectFactory factory = new ObjectFactory();
+		JAXBElement<ArrayOfItem> element = factory.createItems(arrayOfItem);
+		invoicesString=XeroXmlManager.marshall(element);
+		System.out.println(invoicesString);
+        return invoicesString;
+    }
+    /**
+     * This method converts given user input details to xml data 
+     * by using JAXBElement.
+     * @param arrayOfUser
+     * @return
+     */
+    public static String usersToXml(ArrayOfUser arrayOfUser) {
 
-            StringWriter stringWriter = new StringWriter();
-            marshaller.marshal(element, stringWriter);
-            paymentsString = stringWriter.toString();
-
-        } catch (JAXBException ex) {
-            ex.printStackTrace();
-        }
-
-        return paymentsString;
+    	String invoicesString = null;
+        ObjectFactory factory = new ObjectFactory();
+		JAXBElement<ArrayOfUser> element = factory.createUsers(arrayOfUser);
+		invoicesString=XeroXmlManager.marshall(element);
+		System.out.println(invoicesString);
+        return invoicesString;
+    }
+    /**
+     * This method can used by the input data to xml conversion methods.
+     * marshaller implemented in this method.
+     * @param element
+     * @return
+     */
+    public static String marshall(JAXBElement element) {
+    	String xmlString = null;
+    	JAXBContext context;
+		try {
+			context = JAXBContext.newInstance(ResponseType.class);
+			Marshaller marshaller = context.createMarshaller();
+			 marshaller.setProperty("com.sun.xml.bind.xmlDeclaration", Boolean.FALSE);
+	    	StringWriter stringWriter = new StringWriter();
+	        marshaller.marshal(element, stringWriter);
+	        xmlString = stringWriter.toString();
+		} catch (JAXBException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+    	
+        System.out.println(xmlString);
+        return xmlString;
     }
 }

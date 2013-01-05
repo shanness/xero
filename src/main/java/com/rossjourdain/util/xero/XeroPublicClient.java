@@ -105,23 +105,22 @@ public class XeroPublicClient {
        return accessor;
     } 
 	/**
-	 * This method returns a list of invoices and its details. 
+	 * This method returns a list of Xero items and its details. 
 	 * It calls send request method to send request to OAuthClient,
-	 * OAuth client returns an array of Invoices by calling XeroXmlManager's 
-	 * xmlToInvoice method, that method reads body of response and returns 
+	 * OAuth client returns an array of Xero by calling XeroXmlManager's 
+	 * xmlToXero item method, that method reads body of response and returns 
 	 * XML format output. 
 	 * @param module
 	 * @return
 	 * @throws XeroClientException
 	 * @throws XeroClientUnexpectedException
 	 */
-	 public ArrayOfInvoice getXeros(String module) throws XeroClientException, XeroClientUnexpectedException {
-	        ArrayOfInvoice arrayOfInvoices = null;
+	 public OAuthMessage getXeros(String module) throws XeroClientException, XeroClientUnexpectedException {
+	        OAuthMessage response;
 	        try {
                 List<Parameter> getList;
                 getList=OAuth.newList(OAuth.OAUTH_TOKEN, oauth_token, OAuth.OAUTH_VERIFIER, oauth_token_verifier);
-                OAuthMessage response = sendRequest(getList, module, GET);
-	            arrayOfInvoices = XeroXmlManager.xmlToInvoices(response.getBodyAsStream());	            
+                response = sendRequest(getList, module, GET);
 	        } catch (OAuthProblemException ex) {
 	        	ex.printStackTrace();
 	            throw new XeroClientException("Error getting invoices", ex);
@@ -129,10 +128,10 @@ public class XeroPublicClient {
 	        	ex.printStackTrace();
 	            throw new XeroClientUnexpectedException("", ex);
 	        }
-	        return arrayOfInvoices;
+	        return response;
 	    }
 	 /**
-	  * This method returns a particular invoice item details by getting
+	  * This method returns a particular Xero item details by getting
 	  * invoiceId value, then it perform like list method.
 	  * @param invoiceId
 	  * @param module
@@ -140,13 +139,12 @@ public class XeroPublicClient {
 	  * @throws XeroClientException
 	  * @throws XeroClientUnexpectedException
 	  */
-	 public ArrayOfInvoice getXero(String invoiceId, String module) throws XeroClientException, XeroClientUnexpectedException {
-	        ArrayOfInvoice arrayOfInvoices = null;
+	 public OAuthMessage getXero(String id, String module) throws XeroClientException, XeroClientUnexpectedException {
+	        OAuthMessage response;
 	        try {
                  List<Parameter> getList;
                  getList=OAuth.newList(OAuth.OAUTH_TOKEN, oauth_token, OAuth.OAUTH_VERIFIER, oauth_token_verifier);
-                 OAuthMessage response = sendRequest(getList, module+"/"+invoiceId, GET);
-                 arrayOfInvoices = XeroXmlManager.xmlToInvoices(response.getBodyAsStream());	            
+                 response = sendRequest(getList, module+"/"+id, GET);
 	        } catch (OAuthProblemException ex) {
 	        	ex.printStackTrace();
 	            throw new XeroClientException("Error getting invoices", ex);
@@ -154,31 +152,30 @@ public class XeroPublicClient {
 	        	ex.printStackTrace();
 	            throw new XeroClientUnexpectedException("", ex);
 	        }
-	        return arrayOfInvoices;
+	        return response;
 	    }
 	 /**
-	  * This method can do both create and update an invoice item and
-	  * it takes arrayOfInvoice as input that has invoice arguments.
-	  * @param arrayOfInvoices
+	  * This method can do both create and update Xero item and
+	  * it takes String data as input that has Xero item arguments.
+	  * @param data
 	  * @param module
 	  * @throws XeroClientException
 	  * @throws XeroClientUnexpectedException
 	  */
-	 public void postXero(ArrayOfInvoice arrayOfInvoices, String module) throws XeroClientException, XeroClientUnexpectedException {
-		 
-		 try {			 
-			 String invoiceString = XeroXmlManager.invoicesToXml(arrayOfInvoices);
+	 public OAuthMessage postXero(String data, String module) throws XeroClientException, XeroClientUnexpectedException {
+		 OAuthMessage response;
+		 try {			 			 
              List<Parameter> postList;
-             postList=OAuth.newList(OAuth.OAUTH_TOKEN, oauth_token, OAuth.OAUTH_VERIFIER, oauth_token_verifier, XML, invoiceString);
-             
-             OAuthMessage response = sendRequest(postList, module, POST);	            	            
+             postList=OAuth.newList(OAuth.OAUTH_TOKEN, oauth_token, OAuth.OAUTH_VERIFIER, oauth_token_verifier, XML, data);
+             response = sendRequest(postList, module, POST);	            	            
 	        } catch (OAuthProblemException ex) {	
 	        	ex.printStackTrace();
 	            throw new XeroClientException("Error getting invoices", ex);
 	        } catch (Exception ex) {
 	        	ex.printStackTrace();
 	            throw new XeroClientUnexpectedException("", ex);
-	        }		 
+	        }	
+		 return response;
 	 }
 	 
 	 public Report getReport(String reportUrl) throws XeroClientException, XeroClientUnexpectedException {
@@ -277,7 +274,7 @@ public class XeroPublicClient {
 	    }
 	 /**
 	  * This method returns OAuthClient invoke method response.
-	  * 
+	  * Client invoke method call from this method.
 	  * @param params
 	  * @param bizFunction
 	  * @param method
@@ -288,9 +285,7 @@ public class XeroPublicClient {
 	  */
 	public OAuthMessage sendRequest(List<Parameter> params, String bizFunction, String method) throws IOException,
     URISyntaxException, OAuthException    {
-		String url = endpointUrl + bizFunction;
-		OAuthAccessor accessor=buildAccessor();
-	      
+		String url = endpointUrl + bizFunction;	      
 		OAuthClient client = new OAuthClient(new HttpClient4());
 		return client.invoke(buildAccessor(), method, url, params);
    }
