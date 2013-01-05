@@ -1,1 +1,30 @@
-/target/
+*.class
+
+# Package Files #
+*.war
+*.ear
+
+# Package Files #
+dist/
+target/
+
+# Eclipse settings file
+.settings
+.metadata
+
+# Ignore temporary files
+/tmp
+/log/*.log
+*.lock
+/target
+*.*~
+
+# Ignore all logfiles and tempfiles.
+/log/*.log
+/tmp
+
+# Ignore all files which ends with ~
+*~
+
+# Ignore all files which ends with lock
+*.lock

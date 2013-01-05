@@ -115,12 +115,11 @@ public class XeroPublicClient {
 	 * @throws XeroClientException
 	 * @throws XeroClientUnexpectedException
 	 */
-	 public OAuthMessage getXeros(String module) throws XeroClientException, XeroClientUnexpectedException {
-	        OAuthMessage response;
+	 public String listAll(String module) throws XeroClientException, XeroClientUnexpectedException {
+	        String responseString;
 	        try {
-                List<Parameter> getList;
-                getList=OAuth.newList(OAuth.OAUTH_TOKEN, oauth_token, OAuth.OAUTH_VERIFIER, oauth_token_verifier);
-                response = sendRequest(getList, module, GET);
+                List<Parameter> getList = OAuth.newList(OAuth.OAUTH_TOKEN, oauth_token, OAuth.OAUTH_VERIFIER, oauth_token_verifier);
+                responseString = sendRequest(getList, module, GET).readBodyAsString();
 	        } catch (OAuthProblemException ex) {
 	        	ex.printStackTrace();
 	            throw new XeroClientException("Error getting invoices", ex);
@@ -128,7 +127,7 @@ public class XeroPublicClient {
 	        	ex.printStackTrace();
 	            throw new XeroClientUnexpectedException("", ex);
 	        }
-	        return response;
+	        return responseString;
 	    }
 	 /**
 	  * This method returns a particular Xero item details by getting
@@ -139,12 +138,11 @@ public class XeroPublicClient {
 	  * @throws XeroClientException
 	  * @throws XeroClientUnexpectedException
 	  */
-	 public OAuthMessage getXero(String id, String module) throws XeroClientException, XeroClientUnexpectedException {
-	        OAuthMessage response;
+	 public String list(String id, String module) throws XeroClientException, XeroClientUnexpectedException {
+		 String response;
 	        try {
-                 List<Parameter> getList;
-                 getList=OAuth.newList(OAuth.OAUTH_TOKEN, oauth_token, OAuth.OAUTH_VERIFIER, oauth_token_verifier);
-                 response = sendRequest(getList, module+"/"+id, GET);
+                 List<Parameter> getList=OAuth.newList(OAuth.OAUTH_TOKEN, oauth_token, OAuth.OAUTH_VERIFIER, oauth_token_verifier);
+                 response = sendRequest(getList, module+"/"+id, GET).readBodyAsString();
 	        } catch (OAuthProblemException ex) {
 	        	ex.printStackTrace();
 	            throw new XeroClientException("Error getting invoices", ex);
@@ -162,12 +160,11 @@ public class XeroPublicClient {
 	  * @throws XeroClientException
 	  * @throws XeroClientUnexpectedException
 	  */
-	 public OAuthMessage postXero(String data, String module) throws XeroClientException, XeroClientUnexpectedException {
-		 OAuthMessage response;
+	 public String post(String data, String module) throws XeroClientException, XeroClientUnexpectedException {
+		 String response;
 		 try {			 			 
-             List<Parameter> postList;
-             postList=OAuth.newList(OAuth.OAUTH_TOKEN, oauth_token, OAuth.OAUTH_VERIFIER, oauth_token_verifier, XML, data);
-             response = sendRequest(postList, module, POST);	            	            
+             List<Parameter> postList=OAuth.newList(OAuth.OAUTH_TOKEN, oauth_token, OAuth.OAUTH_VERIFIER, oauth_token_verifier, XML, data);
+             response = sendRequest(postList, module, POST).readBodyAsString();	            	            
 	        } catch (OAuthProblemException ex) {	
 	        	ex.printStackTrace();
 	            throw new XeroClientException("Error getting invoices", ex);
@@ -196,6 +193,7 @@ public class XeroPublicClient {
 	        }
 	        return report;
 	    }
+	 
 	 public void postContacts(ArrayOfContact arrayOfContact) throws XeroClientException, XeroClientUnexpectedException {
 	        try {
 	            String contactsString = XeroXmlManager.contactsToXml(arrayOfContact);
@@ -208,6 +206,7 @@ public class XeroPublicClient {
 	            throw new XeroClientUnexpectedException("", ex);
 	        }
 	    }
+	 
 	 public void postPayments(ArrayOfPayment arrayOfPayment) throws XeroClientException, XeroClientUnexpectedException {
 	        try {
 	            OAuthClient client = new OAuthClient(new HttpClient4());
