@@ -239,7 +239,8 @@ public class XeroXmlManager {
 		try {
 			context = JAXBContext.newInstance(ResponseType.class);
 			Marshaller marshaller = context.createMarshaller();
-			 marshaller.setProperty("com.sun.xml.bind.xmlDeclaration", Boolean.FALSE);
+            marshaller.setProperty(Marshaller.JAXB_FRAGMENT, Boolean.TRUE);
+//			 marshaller.setProperty("com.sun.xml.bind.xmlDeclaration", Boolean.FALSE);
 	    	StringWriter stringWriter = new StringWriter();
 	        marshaller.marshal(element, stringWriter);
 	        xmlString = stringWriter.toString();
