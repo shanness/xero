@@ -76,7 +76,7 @@ public class XeroClient {
             OAuthClient client = new OAuthClient(new HttpClient4());
             OAuthAccessor accessor = buildAccessor();
             OAuthMessage response = client.invoke(accessor, OAuthMessage.GET, endpointUrl + "Invoices", null);
-            //arrayOfInvoices = XeroXmlManager.xmlToInvoices(response.getBodyAsStream());
+            arrayOfInvoices = XeroXmlManager.fromXml(response.getBodyAsStream()).getInvoices();
         } catch (OAuthProblemException ex) {
             throw new XeroClientException("Error getting invoices", ex);
         } catch (Exception ex) {
