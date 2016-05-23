@@ -58,7 +58,7 @@ public class XeroClient {
         this.privateKey = clientProperties.getPrivateKey();
     }
 
-    private OAuthAccessor buildAccessor() {
+    protected OAuthAccessor buildAccessor() {
         OAuthConsumer consumer = new OAuthConsumer(null, consumerKey, null, null);
         consumer.setProperty(RSA_SHA1.PRIVATE_KEY, privateKey);
         consumer.setProperty(OAuth.OAUTH_SIGNATURE_METHOD, OAuth.RSA_SHA1);
