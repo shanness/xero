@@ -31,7 +31,9 @@ import net.oauth.ParameterStyle;
 import net.oauth.client.OAuthClient;
 import net.oauth.client.OAuthResponseMessage;
 import net.oauth.client.httpclient4.HttpClient4;
+import net.oauth.http.HttpResponseMessage;
 import net.oauth.signature.RSA_SHA1;
+import org.apache.http.client.HttpClient;
 
 /**
  *
@@ -70,25 +72,88 @@ public class XeroClient {
         return accessor;
     }    
 
-    public ArrayOfInvoice getInvoices() throws XeroClientException, XeroClientUnexpectedException {
+    public ArrayOfInvoice getInvoices() throws XeroClientUnexpectedException, OAuthProblemException {
         ArrayOfInvoice arrayOfInvoices = null;
         try {
-            OAuthClient client = new OAuthClient(new HttpClient4());
+            OAuthClient client = getOAuthClient();
             OAuthAccessor accessor = buildAccessor();
             OAuthMessage response = client.invoke(accessor, OAuthMessage.GET, endpointUrl + "Invoices", null);
             arrayOfInvoices = XeroXmlManager.fromXml(response.getBodyAsStream()).getInvoices();
         } catch (OAuthProblemException ex) {
-            throw new XeroClientException("Error getting invoices", ex);
+            throw ex;
         } catch (Exception ex) {
             throw new XeroClientUnexpectedException("", ex);
         }
         return arrayOfInvoices;
     }
 
-    public Report getReport(String reportUrl) throws XeroClientException, XeroClientUnexpectedException {
+    public Contact getContact(String contactId) throws XeroClientUnexpectedException, OAuthProblemException {
+        ArrayOfContact arrayOfContact = null;
+        try {
+            OAuthClient client = getOAuthClient();
+            OAuthAccessor accessor = buildAccessor();
+            OAuthMessage response = client.invoke(accessor, OAuthMessage.GET, endpointUrl + "Contacts" + "/" + contactId, null);
+            arrayOfContact = XeroXmlManager.fromXml(response.getBodyAsStream()).getContacts();
+            if ( arrayOfContact.getContact().size() != 1 ) {
+                throw new XeroClientUnexpectedException("Should have had 1 client for id[" + contactId + "] - Instead have[" + arrayOfContact.getContact().size() + "]",new IllegalStateException());
+            }
+            return arrayOfContact.getContact().get(0);
+        } catch (OAuthProblemException ex) {
+            throw ex;
+        } catch (Exception ex) {
+            throw new XeroClientUnexpectedException("", ex);
+        }
+    }
+
+    public ArrayOfContact getContacts() throws XeroClientUnexpectedException, OAuthProblemException {
+        ArrayOfContact arrayOfContact = null;
+        try {
+            OAuthClient client = getOAuthClient();
+            OAuthAccessor accessor = buildAccessor();
+            OAuthMessage response = client.invoke(accessor, OAuthMessage.GET, endpointUrl + "Contacts", null);
+            arrayOfContact = XeroXmlManager.fromXml(response.getBodyAsStream()).getContacts();
+        } catch (OAuthProblemException ex) {
+            throw ex;
+        } catch (Exception ex) {
+            throw new XeroClientUnexpectedException("", ex);
+        }
+        return arrayOfContact;
+    }
+
+    public ArrayOfAccount getAccounts() throws XeroClientUnexpectedException, OAuthProblemException {
+        ArrayOfAccount arrayOfAccount = null;
+        try {
+            OAuthClient client = getOAuthClient();
+            OAuthAccessor accessor = buildAccessor();
+            OAuthMessage response = client.invoke(accessor, OAuthMessage.GET, endpointUrl + "Accounts", null);
+            arrayOfAccount = XeroXmlManager.fromXml(response.getBodyAsStream()).getAccounts();
+        } catch (OAuthProblemException ex) {
+            throw ex;
+        } catch (Exception ex) {
+            throw new XeroClientUnexpectedException("", ex);
+        }
+        return arrayOfAccount;
+    }
+
+    public ArrayOfTrackingCategory getTrackingCategories() throws XeroClientUnexpectedException, OAuthProblemException {
+        ArrayOfTrackingCategory arrayOfTrackingCategory = null;
+        try {
+            OAuthClient client = getOAuthClient();
+            OAuthAccessor accessor = buildAccessor();
+            OAuthMessage response = client.invoke(accessor, OAuthMessage.GET, endpointUrl + "TrackingCategories", null);
+            arrayOfTrackingCategory = XeroXmlManager.fromXml(response.getBodyAsStream()).getTrackingCategories();
+        } catch (OAuthProblemException ex) {
+            throw ex;
+        } catch (Exception ex) {
+            throw new XeroClientUnexpectedException("", ex);
+        }
+        return arrayOfTrackingCategory;
+    }
+
+     public Report getReport(String reportUrl) throws XeroClientUnexpectedException, OAuthProblemException {
         Report report = null;
         try {
-            OAuthClient client = new OAuthClient(new HttpClient4());
+            OAuthClient client = getOAuthClient();
             OAuthAccessor accessor = buildAccessor();
             OAuthMessage response = client.invoke(accessor, OAuthMessage.GET, endpointUrl + "Reports" + reportUrl, null);
             ResponseType responseType = XeroXmlManager.xmlToResponse(response.getBodyAsStream());
@@ -97,53 +162,69 @@ public class XeroClient {
                 report = responseType.getReports().getReport().get(0);
             }
         } catch (OAuthProblemException ex) {
-            throw new XeroClientException("Error getting invoices", ex);
+            throw ex;
         } catch (Exception ex) {
             throw new XeroClientUnexpectedException("", ex);
         }
         return report;
     }
 
-    public void postContacts(ArrayOfContact arrayOfContact) throws XeroClientException, XeroClientUnexpectedException {
+    public void postContacts(ArrayOfContact arrayOfContact) throws XeroClientUnexpectedException, OAuthProblemException {
         try {
             String contactsString = XeroXmlManager.contactsToXml(arrayOfContact);
-            OAuthClient client = new OAuthClient(new HttpClient4());
+            OAuthClient client = getOAuthClient();
             OAuthAccessor accessor = buildAccessor();
             OAuthMessage response = client.invoke(accessor, OAuthMessage.POST, endpointUrl + "Contacts", OAuth.newList("xml", contactsString));
         } catch (OAuthProblemException ex) {
-            throw new XeroClientException("Error posting contancts", ex);
+            throw ex;
         } catch (Exception ex) {
             throw new XeroClientUnexpectedException("", ex);
         }
     }
 
-    public void postInvoices(ArrayOfInvoice arrayOfInvoices) throws XeroClientException, XeroClientUnexpectedException {
+    public Invoice postInvoice(Invoice invoice) throws XeroClientUnexpectedException, OAuthProblemException {
+        ArrayOfInvoice arrayOfInvoice = new ArrayOfInvoice();
+        arrayOfInvoice.getInvoice().add(invoice);
+        ArrayOfInvoice returnedInvoices = postInvoices(arrayOfInvoice);
+        return returnedInvoices.getInvoice().get(0);
+    }
+
+    public ArrayOfInvoice postInvoices(ArrayOfInvoice arrayOfInvoices) throws XeroClientUnexpectedException, OAuthProblemException {
         try {
-            OAuthClient client = new OAuthClient(new HttpClient4());
+            OAuthClient client = getOAuthClient();
             OAuthAccessor accessor = buildAccessor();
-            String contactsString = XeroXmlManager.invoicesToXml(arrayOfInvoices);
-            OAuthMessage response = client.invoke(accessor, OAuthMessage.POST, endpointUrl + "Invoices", OAuth.newList("xml", contactsString));
+            String invoicesXml = XeroXmlManager.invoicesToXml(arrayOfInvoices);
+            OAuthMessage response = client.invoke(accessor, OAuthMessage.POST, endpointUrl + "Invoices", OAuth.newList("xml", invoicesXml));
+            return XeroXmlManager.fromXml(response.getBodyAsStream()).getInvoices();
         } catch (OAuthProblemException ex) {
-            throw new XeroClientException("Error posting invoices", ex);
+            throw ex;
         } catch (Exception ex) {
             throw new XeroClientUnexpectedException("", ex);
         }
     }
 
-    public void postPayments(ArrayOfPayment arrayOfPayment) throws XeroClientException, XeroClientUnexpectedException {
+    private OAuthClient getOAuthClient() {
+        HttpClient4 httpClient4 = new HttpClient4();
+        OAuthClient oAuthClient = new OAuthClient(httpClient4);
+        oAuthClient.getHttpParameters().put(net.oauth.http.HttpClient.READ_TIMEOUT, new Integer(5000));
+        oAuthClient.getHttpParameters().put(net.oauth.http.HttpClient.CONNECT_TIMEOUT, new Integer(5000));
+        return oAuthClient;
+    }
+
+    public void postPayments(ArrayOfPayment arrayOfPayment) throws XeroClientUnexpectedException, OAuthProblemException {
         try {
-            OAuthClient client = new OAuthClient(new HttpClient4());
+            OAuthClient client = getOAuthClient();
             OAuthAccessor accessor = buildAccessor();
             String paymentsString = XeroXmlManager.paymentsToXml(arrayOfPayment);
             OAuthMessage response = client.invoke(accessor, OAuthMessage.POST, endpointUrl + "Payments", OAuth.newList("xml", paymentsString));
         } catch (OAuthProblemException ex) {
-            throw new XeroClientException("Error posting payments", ex);
+            throw ex;
         } catch (Exception ex) {
             throw new XeroClientUnexpectedException("", ex);
         }
     }
 
-    public File getInvoiceAsPdf(String invoiceId) throws XeroClientException, XeroClientUnexpectedException {
+    public File getInvoiceAsPdf(String invoiceId) throws XeroClientUnexpectedException, OAuthProblemException {
 
         File file = null;
         InputStream in = null;
@@ -151,7 +232,7 @@ public class XeroClient {
 
         try {
 
-            OAuthClient client = new OAuthClient(new HttpClient4());
+            OAuthClient client = getOAuthClient();
             OAuthAccessor accessor = buildAccessor();
 
             OAuthMessage request = accessor.newRequestMessage(OAuthMessage.GET, endpointUrl + "Invoices" + "/" + invoiceId, null);
@@ -161,7 +242,7 @@ public class XeroClient {
 
             file = new File("Invoice-" + invoiceId + ".pdf");
 
-            if (response != null && response.getHttpResponse() != null && (response.getHttpResponse().getStatusCode() / 2) != 2) {
+            if (response != null && response.getHttpResponse() != null && (response.getHttpResponse().getStatusCode() == HttpResponseMessage.STATUS_OK)) {
                 in = response.getBodyAsStream();
                 out = new FileOutputStream(file);
 
@@ -175,7 +256,7 @@ public class XeroClient {
             }
 
         } catch (OAuthProblemException ex) {
-            throw new XeroClientException("Error getting PDF of invoice " + invoiceId, ex);
+            throw ex;
         } catch (Exception ex) {
             throw new XeroClientUnexpectedException("", ex);
         } finally {

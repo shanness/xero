@@ -17,6 +17,8 @@
  */
 package com.rossjourdain.util.xero;
 
+import net.oauth.OAuthProblemException;
+
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.math.BigDecimal;
@@ -29,7 +31,7 @@ import java.util.List;
  */
 public class App {
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws OAuthProblemException {
 
         // Prepare the Xero Client
         XeroClient xeroClient = null;
@@ -58,8 +60,6 @@ public class App {
                 }
             }
 
-        } catch (XeroClientException ex) {
-            ex.printDetails();
         } catch (XeroClientUnexpectedException ex) {
             ex.printStackTrace();
         }
@@ -101,8 +101,6 @@ public class App {
             invoices.add(invoice);
 
             xeroClient.postInvoices(arrayOfInvoice);
-        } catch (XeroClientException ex) {
-            ex.printDetails();
         } catch (XeroClientUnexpectedException ex) {
             ex.printStackTrace();
         }
@@ -120,8 +118,6 @@ public class App {
             contacts.add(contact1);
             xeroClient.postContacts(arrayOfContact);
 
-        } catch (XeroClientException ex) {
-            ex.printDetails();
         } catch (XeroClientUnexpectedException ex) {
             ex.printStackTrace();
         }
@@ -147,8 +143,6 @@ public class App {
 
             xeroClient.postPayments(arrayOfPayment);
 
-        } catch (XeroClientException ex) {
-            ex.printDetails();
         } catch (XeroClientUnexpectedException ex) {
             ex.printStackTrace();
         }
