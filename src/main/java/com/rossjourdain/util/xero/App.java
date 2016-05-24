@@ -56,7 +56,7 @@ public class App {
                 // Retrieve an invoice as a PDF 
                 // (can be used to retrieve json too, just change application/pdf to application/json)
                 if (!arrayOfExistingInvoices.getInvoice().isEmpty()) {
-                    xeroClient.getInvoiceAsPdf(arrayOfExistingInvoices.getInvoice().get(0).getInvoiceID());
+                    xeroClient.getInvoiceAsPdfFile(arrayOfExistingInvoices.getInvoice().get(0).getInvoiceID());
                 }
             }
 

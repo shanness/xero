@@ -17,10 +17,12 @@
  */
 package com.rossjourdain.util.xero;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.ByteArrayOutputStream;
 
 import net.oauth.OAuth;
 import net.oauth.OAuthAccessor;
@@ -33,7 +35,6 @@ import net.oauth.client.OAuthResponseMessage;
 import net.oauth.client.httpclient4.HttpClient4;
 import net.oauth.http.HttpResponseMessage;
 import net.oauth.signature.RSA_SHA1;
-import org.apache.http.client.HttpClient;
 
 /**
  *
@@ -60,6 +61,7 @@ public class XeroClient {
         this.privateKey = clientProperties.getPrivateKey();
     }
 
+
     protected OAuthAccessor buildAccessor() {
         OAuthConsumer consumer = new OAuthConsumer(null, consumerKey, null, null);
         consumer.setProperty(RSA_SHA1.PRIVATE_KEY, privateKey);
@@ -73,18 +75,34 @@ public class XeroClient {
     }    
 
     public ArrayOfInvoice getInvoices() throws XeroClientUnexpectedException, OAuthProblemException {
-        ArrayOfInvoice arrayOfInvoices = null;
         try {
             OAuthClient client = getOAuthClient();
             OAuthAccessor accessor = buildAccessor();
             OAuthMessage response = client.invoke(accessor, OAuthMessage.GET, endpointUrl + "Invoices", null);
-            arrayOfInvoices = XeroXmlManager.fromXml(response.getBodyAsStream()).getInvoices();
+            return XeroXmlManager.fromXml(response.getBodyAsStream()).getInvoices();
         } catch (OAuthProblemException ex) {
             throw ex;
         } catch (Exception ex) {
             throw new XeroClientUnexpectedException("", ex);
         }
-        return arrayOfInvoices;
+    }
+
+    public Invoice getInvoice(String invoiceId) throws XeroClientUnexpectedException, OAuthProblemException {
+        ArrayOfInvoice arrayOfInvoice = null;
+        try {
+            OAuthClient client = getOAuthClient();
+            OAuthAccessor accessor = buildAccessor();
+            OAuthMessage response = client.invoke(accessor, OAuthMessage.GET, endpointUrl + "Invoices" + "/" + invoiceId, null);
+            arrayOfInvoice = XeroXmlManager.fromXml(response.getBodyAsStream()).getInvoices();
+            if ( arrayOfInvoice.getInvoice().size() != 1 ) {
+                throw new XeroClientUnexpectedException("Should have had 1 invoice for id[" + invoiceId + "] - Instead have[" + arrayOfInvoice.getInvoice().size() + "]",new IllegalStateException());
+            }
+            return arrayOfInvoice.getInvoice().get(0);
+        } catch (OAuthProblemException ex) {
+            throw ex;
+        } catch (Exception ex) {
+            throw new XeroClientUnexpectedException("", ex);
+        }
     }
 
     public Contact getContact(String contactId) throws XeroClientUnexpectedException, OAuthProblemException {
@@ -224,11 +242,32 @@ public class XeroClient {
         }
     }
 
-    public File getInvoiceAsPdf(String invoiceId) throws XeroClientUnexpectedException, OAuthProblemException {
+    public File getInvoiceAsPdfFile(String invoiceId) throws XeroClientUnexpectedException, OAuthProblemException {
+        File file = null;
+        FileOutputStream out = null;
+        try {
+            file = new File("Invoice-" + invoiceId + ".pdf");
+            out = new FileOutputStream(file);
+            out.write(getInvoiceAsPdfByteArray(invoiceId));
+        } catch (IOException e) {
+            throw new XeroClientUnexpectedException("", e);
+        } finally {
+            try {
+                if (out != null) {
+                    out.flush();
+                    out.close();
+                }
+            } catch (IOException ex) {
+            }
+        }
+        return file;
+    }
+
+    public byte[] getInvoiceAsPdfByteArray(String invoiceId) throws XeroClientUnexpectedException, OAuthProblemException {
 
         File file = null;
         InputStream in = null;
-        FileOutputStream out = null;
+        ByteArrayOutputStream out = null;
 
         try {
 
@@ -239,12 +278,9 @@ public class XeroClient {
             request.getHeaders().add(new OAuth.Parameter("Accept", "application/pdf"));
             OAuthResponseMessage response = client.access(request, ParameterStyle.BODY);
 
-
-            file = new File("Invoice-" + invoiceId + ".pdf");
-
             if (response != null && response.getHttpResponse() != null && (response.getHttpResponse().getStatusCode() == HttpResponseMessage.STATUS_OK)) {
                 in = response.getBodyAsStream();
-                out = new FileOutputStream(file);
+                out = new ByteArrayOutputStream();
 
                 byte[] buffer = new byte[1024];
                 int bytesRead = 0;
@@ -274,7 +310,7 @@ public class XeroClient {
             } catch (IOException ex) {
             }
         }
-        return file;
+        return out.toByteArray();
     }
 
     public void setConsumerKey(String consumerKey) {
