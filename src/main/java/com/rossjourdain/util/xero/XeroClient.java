@@ -377,7 +377,8 @@ public class XeroClient {
 
             public HttpClient getHttpClient(URL server) {
                 // May as well clean up expired connections.  Make sure to be logging org.apache.http on debug to see them getting cleaned up
-                clientConnectionManager.closeExpiredConnections();
+                // Turned this off, looks like they are meant to stay persistent for performance reasons.
+//                clientConnectionManager.closeExpiredConnections();
                 return client;
             }
         }
