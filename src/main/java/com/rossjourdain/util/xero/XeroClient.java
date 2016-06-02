@@ -22,7 +22,8 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.ByteArrayOutputStream;
+import java.net.URL;
+import java.util.concurrent.TimeUnit;
 
 import net.oauth.OAuth;
 import net.oauth.OAuthAccessor;
@@ -33,11 +34,18 @@ import net.oauth.ParameterStyle;
 import net.oauth.client.OAuthClient;
 import net.oauth.client.OAuthResponseMessage;
 import net.oauth.client.httpclient4.HttpClient4;
+import net.oauth.client.httpclient4.HttpClientPool;
 import net.oauth.http.HttpResponseMessage;
 import net.oauth.signature.RSA_SHA1;
+import org.apache.http.client.HttpClient;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClientBuilder;
+import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
 
 /**
+ * Construct this class for the private API.
  *
+ * For Public and Partner API use {@link PublicXeroClient}
  * @author ross
  */
 public class XeroClient {
@@ -221,13 +229,6 @@ public class XeroClient {
         }
     }
 
-    private OAuthClient getOAuthClient() {
-        HttpClient4 httpClient4 = new HttpClient4();
-        OAuthClient oAuthClient = new OAuthClient(httpClient4);
-        oAuthClient.getHttpParameters().put(net.oauth.http.HttpClient.READ_TIMEOUT, new Integer(5000));
-        oAuthClient.getHttpParameters().put(net.oauth.http.HttpClient.CONNECT_TIMEOUT, new Integer(5000));
-        return oAuthClient;
-    }
 
     public void postPayments(ArrayOfPayment arrayOfPayment) throws XeroClientUnexpectedException, OAuthProblemException {
         try {
@@ -328,4 +329,56 @@ public class XeroClient {
     public void setPrivateKey(String privateKey) {
         this.privateKey = privateKey;
     }
+
+    private OAuthClient getOAuthClient() {
+        HttpClient4 httpClient4 = new HttpClient4(SHARED_CLIENT);
+        OAuthClient oAuthClient = new OAuthClient(httpClient4);
+        oAuthClient.getHttpParameters().put(net.oauth.http.HttpClient.READ_TIMEOUT, new Integer(5000));
+        oAuthClient.getHttpParameters().put(net.oauth.http.HttpClient.CONNECT_TIMEOUT, new Integer(5000));
+        return oAuthClient;
+    }
+
+    // This is based on the HttpClient4 one used by the default constructor, but allowing overridding the con per route.
+    // It's also been updated to use
+    private static final HttpClientPool SHARED_CLIENT = new SingleClient();
+
+    private static class SingleClient implements HttpClientPool {
+
+        private final CloseableHttpClient client;
+
+        public PoolingHttpClientConnectionManager getClientConnectionManager() {
+            return clientConnectionManager;
+        }
+
+        private final PoolingHttpClientConnectionManager clientConnectionManager;
+
+
+        // Bit lost with all of this, but this is the only way I've found to override the ConnPerRoute problem I was having.
+        SingleClient() {
+            clientConnectionManager = new PoolingHttpClientConnectionManager(5000,TimeUnit.MILLISECONDS);
+            clientConnectionManager.setDefaultMaxPerRoute(30);
+            client = HttpClientBuilder.create().setConnectionManager(clientConnectionManager).build();
+//            client = new DefaultHttpClient(clientConnectionManager);
+
+//                if (!(clientConnectionManager instanceof ThreadSafeClientConnManager)) {
+//                    HttpParams params = client.getParams();
+//                    client = new DefaultHttpClient(
+//                            new ThreadSafeClientConnManager(clientConnectionManager.getSchemeRegistry(),
+//                                    5000,TimeUnit.MILLISECONDS,
+//                                    new ConnPerRouteBean(20)
+//                            ), params);
+//                }
+            }
+
+
+            public void closeExpiredConnections() {
+                clientConnectionManager.closeExpiredConnections();
+            }
+
+            public HttpClient getHttpClient(URL server) {
+                // May as well clean up expired connections.  Make sure to be logging org.apache.http on debug to see them getting cleaned up
+                clientConnectionManager.closeExpiredConnections();
+                return client;
+            }
+        }
 }
