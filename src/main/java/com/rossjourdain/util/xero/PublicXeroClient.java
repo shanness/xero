@@ -7,6 +7,12 @@ import net.oauth.OAuthAccessor;
 
 /**
  * FIXME : refactor the whole thing to use plays async WS. https://www.playframework.com/documentation/2.3.x/JavaOAuth
+ *
+ * For the public and partner API use this class.
+ * i.e.
+ * <p>
+ * <code>Xero client = new PublicXeroClient(...)</code>
+ *
  */
 public class PublicXeroClient extends XeroClient {
 
