@@ -46,10 +46,24 @@
       <xs:element minOccurs="0" maxOccurs="1" name="EndOfYearLockDate" type="xs:dateTime" />
       <xs:element minOccurs="0" maxOccurs="1" name="CreatedDateUTC" type="xs:dateTime" />
       <xs:element minOccurs="0" maxOccurs="1" name="Timezone" type="timezoneCode" />
+      <xs:element minOccurs="0" maxOccurs="1" name="ShortCode" type="xs:string" />
 
       <xs:element minOccurs="0" maxOccurs="1" name="Addresses" type="ArrayOfAddress" />
       <xs:element minOccurs="0" maxOccurs="1" name="Phones" type="ArrayOfPhone" />
-      
+     <xs:element minOccurs="0" maxOccurs="5" name="PaymentTerms">
+      <xs:complexType>
+        <xs:sequence>
+          <xs:element name="Sales">
+            <xs:complexType>
+              <xs:sequence>
+                <xs:element type="xs:int" name="Day"/>
+                <xs:element type="xs:string" name="Type"/>
+              </xs:sequence>
+            </xs:complexType>
+          </xs:element>
+        </xs:sequence>
+      </xs:complexType>
+    </xs:element>
     </xs:all>
     <xs:attribute name="status" type="entityValidationStatus" use="optional" />
   </xs:complexType>
