@@ -113,6 +113,39 @@ public class XeroClient {
         }
     }
 
+    public Organisation getOrganisation() throws XeroClientUnexpectedException, OAuthProblemException {
+        ArrayOfOrganisation arrayOfContact = null;
+        try {
+            OAuthClient client = getOAuthClient();
+            OAuthAccessor accessor = buildAccessor();
+            OAuthMessage response = client.invoke(accessor, OAuthMessage.GET, endpointUrl + "Organisation", null);
+            arrayOfContact = XeroXmlManager.fromXml(response.getBodyAsStream()).getOrganisations();
+            if ( arrayOfContact.getOrganisation().size() != 1 ) {
+                throw new XeroClientUnexpectedException("Should have had 1 orgainisation Instead have[" + arrayOfContact.getOrganisation().size() + "]",new IllegalStateException());
+            }
+            return arrayOfContact.getOrganisation().get(0);
+        } catch (OAuthProblemException ex) {
+            throw ex;
+        } catch (Exception ex) {
+            throw new XeroClientUnexpectedException("", ex);
+        }
+    }
+
+    public ArrayOfItem getItems() throws XeroClientUnexpectedException, OAuthProblemException {
+        ArrayOfItem arrayOfItem = null;
+        try {
+            OAuthClient client = getOAuthClient();
+            OAuthAccessor accessor = buildAccessor();
+            OAuthMessage response = client.invoke(accessor, OAuthMessage.GET, endpointUrl + "Items", null);
+            arrayOfItem = XeroXmlManager.fromXml(response.getBodyAsStream()).getItems();
+        } catch (OAuthProblemException ex) {
+            throw ex;
+        } catch (Exception ex) {
+            throw new XeroClientUnexpectedException("", ex);
+        }
+        return arrayOfItem;
+    }
+
     public Contact getContact(String contactId) throws XeroClientUnexpectedException, OAuthProblemException {
         ArrayOfContact arrayOfContact = null;
         try {
