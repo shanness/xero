@@ -23,6 +23,8 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.concurrent.TimeUnit;
 
 import net.oauth.OAuth;
@@ -129,6 +131,38 @@ public class XeroClient {
         } catch (Exception ex) {
             throw new XeroClientUnexpectedException("", ex);
         }
+    }
+
+    /**
+     * Currently returns ALL transactions for the specified bank code, in date order (may require multiple internal API hits, but gets put together for return)
+     */
+    public ArrayOfBankTransaction getBankTransactions(String bankCode) throws XeroClientUnexpectedException, OAuthProblemException {
+        ArrayOfBankTransaction arrayOfBankTransaction = null;
+        try {
+            OAuthClient client = getOAuthClient();
+            OAuthAccessor accessor = buildAccessor();
+            Collection<OAuth.Parameter> parameters = new ArrayList<>();
+            parameters.add(new OAuth.Parameter("where","BankAccount.Code==\"" + bankCode + "\""));
+            OAuthMessage response;
+            ArrayOfBankTransaction bankTransactions;
+            int pageNo = 0;
+            do {
+                pageNo++;
+                response = client.invoke(accessor, OAuthMessage.GET, endpointUrl + "BankTransactions?order=Date&page=" + pageNo, parameters);
+                bankTransactions = XeroXmlManager.fromXml(response.getBodyAsStream()).getBankTransactions();
+                if ( bankTransactions == null || bankTransactions.getBankTransaction() == null || bankTransactions.getBankTransaction().isEmpty() ) break;
+                if (arrayOfBankTransaction == null ) {
+                    arrayOfBankTransaction = bankTransactions;
+                } else {
+                    arrayOfBankTransaction.getBankTransaction().addAll(bankTransactions.getBankTransaction());
+                }
+            } while (true);
+        } catch (OAuthProblemException ex) {
+            throw ex;
+        } catch (Exception ex) {
+            throw new XeroClientUnexpectedException("", ex);
+        }
+        return arrayOfBankTransaction;
     }
 
     public ArrayOfItem getItems() throws XeroClientUnexpectedException, OAuthProblemException {
