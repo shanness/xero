@@ -89,7 +89,9 @@ public class XeroClient {
             OAuthClient client = getOAuthClient();
             OAuthAccessor accessor = buildAccessor();
             OAuthMessage response = client.invoke(accessor, OAuthMessage.GET, endpointUrl + "Invoices", null);
-            return XeroXmlManager.fromXml(response.getBodyAsStream()).getInvoices();
+            ArrayOfInvoice invoices = XeroXmlManager.fromXml(response.getBodyAsStream()).getInvoices();
+            if ( invoices == null ) return new ArrayOfInvoice();
+            return invoices;
         } catch (OAuthProblemException ex) {
             throw ex;
         } catch (Exception ex) {
@@ -210,6 +212,7 @@ public class XeroClient {
         } catch (Exception ex) {
             throw new XeroClientUnexpectedException("", ex);
         }
+        if ( arrayOfContact == null ) return new ArrayOfContact();
         return arrayOfContact;
     }
 
@@ -225,6 +228,7 @@ public class XeroClient {
         } catch (Exception ex) {
             throw new XeroClientUnexpectedException("", ex);
         }
+        if ( arrayOfAccount == null ) return new ArrayOfAccount();
         return arrayOfAccount;
     }
 
@@ -240,6 +244,7 @@ public class XeroClient {
         } catch (Exception ex) {
             throw new XeroClientUnexpectedException("", ex);
         }
+        if ( arrayOfTrackingCategory == null ) return new ArrayOfTrackingCategory();
         return arrayOfTrackingCategory;
     }
 
