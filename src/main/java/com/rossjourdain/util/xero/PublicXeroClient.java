@@ -1,7 +1,7 @@
 package com.rossjourdain.util.xero;
 
+import net.oauth.OAuth;
 import net.oauth.OAuthConsumer;
-import org.scribe.model.Token;
 import net.oauth.OAuthAccessor;
 
 
@@ -16,22 +16,31 @@ import net.oauth.OAuthAccessor;
  */
 public class PublicXeroClient extends XeroClient {
 
-	private final String consumerKey;
-	private final String consumerSecret;
-	private final Token accessToken;
+	protected final String consumerKey;
+	protected final String consumerSecret;
+	protected final String accessToken;
+	protected final String tokenSecret;
 
-	public PublicXeroClient(String endpointUrl, String consumerKey, String consumerSecret, Token accessToken) {
-		super(endpointUrl, consumerKey, consumerSecret, ""); // Last arg is private key, used for private apps
+	public PublicXeroClient(String consumerKey, String consumerSecret, String accessToken, String tokenSecret) {
+		super( consumerKey, consumerSecret);
 		this.consumerKey = consumerKey;
 		this.consumerSecret = consumerSecret;
 		this.accessToken = accessToken;
+		this.tokenSecret = tokenSecret;
 	}
 
+	@Override
 	protected OAuthAccessor buildAccessor() {
-		OAuthConsumer consumer = new OAuthConsumer(null, consumerKey, consumerSecret, null);
+		return buildAccessor(null);
+	}
+
+	@Override
+	protected OAuthAccessor buildAccessor(String callbackUrl) {
+		OAuthConsumer consumer = new OAuthConsumer(callbackUrl, consumerKey, consumerSecret, getServiceProvider());
 		OAuthAccessor accessor = new OAuthAccessor(consumer);
-		accessor.accessToken = accessToken.getToken();
-		accessor.tokenSecret = accessToken.getSecret();
+		consumer.setProperty(OAuth.OAUTH_SIGNATURE_METHOD, OAuth.HMAC_SHA1);
+		accessor.accessToken = accessToken;
+		accessor.tokenSecret = tokenSecret;
 		return accessor;
 	}
 
