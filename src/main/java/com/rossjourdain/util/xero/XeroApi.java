@@ -1,8 +1,8 @@
 package com.rossjourdain.util.xero;
 
-import org.scribe.builder.api.DefaultApi10a;
-import org.scribe.model.Token;
-import org.scribe.model.Verb;
+import com.github.scribejava.core.builder.api.DefaultApi10a;
+import com.github.scribejava.core.model.OAuth1RequestToken;
+import com.github.scribejava.core.model.Verb;
 
 /**
  * Xero API for scribe.
@@ -10,7 +10,8 @@ import org.scribe.model.Verb;
  * @author Ashley Schroder
  * 
  */
-public class XeroApi extends DefaultApi10a {
+public class XeroApi extends DefaultApi10a
+{
 	
 	private static final String AUTHORIZATION_URL = "https://api.xero.com/oauth/Authorize?oauth_token=%s";
 
@@ -35,7 +36,7 @@ public class XeroApi extends DefaultApi10a {
 	}
 
 	@Override
-	public String getAuthorizationUrl(Token requestToken) {
+	public String getAuthorizationUrl(OAuth1RequestToken requestToken) {
 		return String.format(AUTHORIZATION_URL, requestToken.getToken());
 	}
 
