@@ -3,6 +3,8 @@ package com.rossjourdain.util.xero;
 import net.oauth.OAuth;
 import net.oauth.OAuthAccessor;
 import net.oauth.OAuthConsumer;
+import net.oauth.OAuthException;
+import net.oauth.OAuthMessage;
 import net.oauth.client.httpclient4.HttpClientPool;
 import net.oauth.signature.RSA_SHA1;
 import org.apache.http.client.HttpClient;
@@ -21,12 +23,15 @@ import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
 import javax.net.ssl.KeyManagerFactory;
 import javax.net.ssl.SSLContext;
 import java.io.IOException;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.security.KeyStore;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.security.UnrecoverableKeyException;
 import java.security.cert.CertificateException;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.concurrent.TimeUnit;
 
 
@@ -63,8 +68,8 @@ public class PartnerXeroClient extends PublicXeroClient {
 		privateKey = thePrivateKey;
 	}
 
-	public PartnerXeroClient(String consumerKey, String consumerSecret, String accessToken, String tokenSecret) {
-		super(consumerKey, consumerSecret,accessToken,tokenSecret);
+	public PartnerXeroClient(String consumerKey, String consumerSecret, AccessToken accessToken) {
+		super(consumerKey, consumerSecret,accessToken);
 		if ( privateKey == null ) {
 			throw new IllegalStateException("Must call initialise before construction");
 		}
@@ -98,10 +103,23 @@ public class PartnerXeroClient extends PublicXeroClient {
 		consumer.setProperty(RSA_SHA1.PRIVATE_KEY, privateKey);
 		consumer.setProperty(OAuth.OAUTH_SIGNATURE_METHOD, OAuth.RSA_SHA1);
 		OAuthAccessor accessor = new OAuthAccessor(consumer);
-		accessor.accessToken = accessToken;
-		accessor.tokenSecret = tokenSecret;
+		accessor.accessToken = accessToken.accessToken;
+		accessor.tokenSecret = accessToken.tokenSecret;
 		return accessor;
 	}
+
+	@Override
+    public AccessToken refreshAccessToken(AccessToken currentAccessToken) throws OAuthException, IOException, URISyntaxException {
+        if ( currentAccessToken.sessionHandle == null ) {
+            throw new OAuthException("Require a session handle.");
+        }
+        OAuthAccessor accessor = buildAccessor();
+        Collection<OAuth.Parameter> parameters = new ArrayList<>();
+        parameters.add(new OAuth.Parameter("oauth_session_handle", currentAccessToken.sessionHandle));
+        OAuthMessage oAuthMessage = getOAuthClient().getAccessToken(accessor, null, parameters);
+		int expiresIn = Integer.parseInt(oAuthMessage.getParameter("oauth_expires_in"));
+		return new AccessToken(accessor.accessToken,accessor.tokenSecret,oAuthMessage.getParameter("oauth_session_handle"),expiresIn);
+    }
 
 	@Override
 	protected HttpClientPool getClientPool() {

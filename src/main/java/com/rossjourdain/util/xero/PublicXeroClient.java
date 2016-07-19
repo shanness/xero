@@ -1,7 +1,5 @@
 package com.rossjourdain.util.xero;
 
-import com.github.scribejava.core.model.OAuth1AccessToken;
-import com.github.scribejava.core.model.OAuth1RequestToken;
 import net.oauth.OAuth;
 import net.oauth.OAuthConsumer;
 import net.oauth.OAuthAccessor;
@@ -27,35 +25,34 @@ public class PublicXeroClient extends XeroClient {
 
 	protected final String consumerKey;
 	protected final String consumerSecret;
-	protected final String accessToken;
-	protected final String tokenSecret;
+	protected final AccessToken accessToken;
 
-	public PublicXeroClient(String consumerKey, String consumerSecret, String accessToken, String tokenSecret) {
+	public PublicXeroClient(String consumerKey, String consumerSecret, AccessToken accessToken) {
 		super( consumerKey, consumerSecret);
 		this.consumerKey = consumerKey;
 		this.consumerSecret = consumerSecret;
 		this.accessToken = accessToken;
-		this.tokenSecret = tokenSecret;
 	}
 
 	@Override
-    public OAuth1RequestToken getRequestToken(String callbackUrl) throws OAuthException, IOException, URISyntaxException {
+    public RequestToken getRequestToken(String callbackUrl) throws OAuthException, IOException, URISyntaxException {
         OAuthAccessor accessor = buildAccessor(callbackUrl);
         Collection<OAuth.Parameter> parameters = new ArrayList<>();
         //  Hmm, this seems stupid having to set it as a param (as it's in the accessor), but fails without it.
         parameters.add(new OAuth.Parameter(OAuth.OAUTH_CALLBACK,accessor.consumer.callbackURL));
         getOAuthClient().getRequestToken(accessor,null,parameters);
-        return new OAuth1RequestToken(accessor.requestToken,accessor.tokenSecret);
+        return new RequestToken(accessor.requestToken,accessor.tokenSecret);
     }
 
 	@Override
-    public OAuth1AccessToken getAccessToken(String requestToken, String secret, String verifier) throws OAuthException, IOException, URISyntaxException {
+    public AccessToken getAccessToken(RequestToken requestToken) throws OAuthException, IOException, URISyntaxException {
         OAuthAccessor accessor = buildAccessor();
         Collection<OAuth.Parameter> parameters = new ArrayList<>();
 //        parameters.add(new OAuth.Parameter(OAuth.OAUTH_TOKEN, requestToken));
-        parameters.add(new OAuth.Parameter(OAuth.OAUTH_VERIFIER, verifier));
+        parameters.add(new OAuth.Parameter(OAuth.OAUTH_VERIFIER, requestToken.verifier));
         OAuthMessage oAuthMessage = getOAuthClient().getAccessToken(accessor, null, parameters);
-        return new OAuth1AccessToken(accessor.accessToken,accessor.tokenSecret);
+        int expiresIn = Integer.parseInt(oAuthMessage.getParameter("oauth_expires_in"));
+        return new AccessToken(accessor.accessToken,accessor.tokenSecret,oAuthMessage.getParameter("oauth_session_handle"),expiresIn);
     }
 
 	@Override
@@ -68,8 +65,8 @@ public class PublicXeroClient extends XeroClient {
 		OAuthConsumer consumer = new OAuthConsumer(callbackUrl, consumerKey, consumerSecret, getServiceProvider());
 		OAuthAccessor accessor = new OAuthAccessor(consumer);
 		consumer.setProperty(OAuth.OAUTH_SIGNATURE_METHOD, OAuth.HMAC_SHA1);
-		accessor.accessToken = accessToken;
-		accessor.tokenSecret = tokenSecret;
+		accessor.accessToken = accessToken.accessToken;
+		accessor.tokenSecret = accessToken.tokenSecret;
 		return accessor;
 	}
 

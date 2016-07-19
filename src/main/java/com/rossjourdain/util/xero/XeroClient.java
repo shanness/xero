@@ -28,8 +28,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.concurrent.TimeUnit;
 
-import com.github.scribejava.core.model.OAuth1AccessToken;
-import com.github.scribejava.core.model.OAuth1RequestToken;
 import net.oauth.OAuth;
 import net.oauth.OAuthAccessor;
 import net.oauth.OAuthConsumer;
@@ -117,12 +115,16 @@ public class XeroClient {
         return new OAuthServiceProvider(getRequestTokenUrl(), getAuthoriseUrl(), getAccessTokenUrl());
     }
 
-    public OAuth1RequestToken getRequestToken(String callbackUrl) throws OAuthException, IOException, URISyntaxException {
+    public RequestToken getRequestToken(String callbackUrl) throws OAuthException, IOException, URISyntaxException {
         throw new UnsupportedOperationException("This only makes sense for public or partner apps.");
     }
 
-    public OAuth1AccessToken getAccessToken(String requestToken, String secret, String verifier) throws OAuthException, IOException, URISyntaxException {
+    public AccessToken getAccessToken(RequestToken requestToken) throws OAuthException, IOException, URISyntaxException {
         throw new UnsupportedOperationException("This only makes sense for public or partner apps.");
+    }
+
+    public AccessToken refreshAccessToken(AccessToken currentAccessToken) throws OAuthException, IOException, URISyntaxException {
+        throw new UnsupportedOperationException("This only makes sense for partner apps.");
     }
 
     public ArrayOfInvoice getInvoices() throws XeroClientUnexpectedException, OAuthProblemException {
