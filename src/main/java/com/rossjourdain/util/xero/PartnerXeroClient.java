@@ -1,33 +1,42 @@
 package com.rossjourdain.util.xero;
 
-import com.github.scribejava.core.model.OAuth1RequestToken;
 import net.oauth.OAuth;
 import net.oauth.OAuthAccessor;
 import net.oauth.OAuthConsumer;
 import net.oauth.client.httpclient4.HttpClientPool;
 import net.oauth.signature.RSA_SHA1;
 import org.apache.http.client.HttpClient;
-import org.apache.http.impl.client.HttpClients;
-import org.apache.http.ssl.SSLContexts;
+import org.apache.http.config.Registry;
+import org.apache.http.config.RegistryBuilder;
+import org.apache.http.conn.scheme.Scheme;
+import org.apache.http.conn.scheme.SchemeRegistry;
+import org.apache.http.conn.socket.ConnectionSocketFactory;
+import org.apache.http.conn.socket.PlainConnectionSocketFactory;
+import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
+import org.apache.http.conn.ssl.SSLSocketFactory;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClientBuilder;
+import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
 
+import javax.net.ssl.KeyManagerFactory;
 import javax.net.ssl.SSLContext;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.net.URL;
-import java.security.KeyManagementException;
 import java.security.KeyStore;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
-import java.security.PrivateKey;
 import java.security.UnrecoverableKeyException;
 import java.security.cert.CertificateException;
+import java.util.concurrent.TimeUnit;
 
 
 /**
  * For the partner API use this class.
  * i.e.
  * <p>
+ *     Initialise once
  * <code>PartnerXeroClient.initialise(..)</code>
+ * 	   And hit this for each call.
  * <code>XeroClient client = new PartnerXeroClient(...)</code>
  *
  */
@@ -35,25 +44,22 @@ public class PartnerXeroClient extends PublicXeroClient {
 
 	private static KeyStore entrustStore;
 
-	private static char[] keyStorePassword;
-
 	private static String privateKey;
 
 	private static HttpClientPool SHARED_CLIENT;
 
+	private static char[] keyStorePassword;
+
 	/**
-	 * You must initialise this first.
+	 * You must initialise this first, before construction.
 	 *
-	 * @param keyStorePath the path to the entrust keystore
+	 * @param theEntrustStore the loaded entrust keystore
 	 * @param thePrivateKey the self signed privite key that had its public key uploaded to xero for your app.
 	 */
-	public static void initialise(String keyStorePath, String alias, char[] theKeyStorePassword, String thePrivateKey)
+	public static void initialise(KeyStore theEntrustStore, char[] theKeyStorePassword, String thePrivateKey)
 			throws CertificateException, NoSuchAlgorithmException, IOException, KeyStoreException, UnrecoverableKeyException {
-		keyStorePassword =  theKeyStorePassword;
-		entrustStore = KeyStore.getInstance(KeyStore.getDefaultType());
-		try (FileInputStream fis = new FileInputStream(keyStorePath)) {
-			entrustStore.load(fis, theKeyStorePassword);
-		}
+		entrustStore = theEntrustStore;
+		keyStorePassword = theKeyStorePassword;
 		privateKey = thePrivateKey;
 	}
 
@@ -101,7 +107,7 @@ public class PartnerXeroClient extends PublicXeroClient {
 	protected HttpClientPool getClientPool() {
 		if ( SHARED_CLIENT == null ) {
 			try {
-				SHARED_CLIENT = new PartnerHttpClientPool(entrustStore, keyStorePassword);
+				SHARED_CLIENT = new PartnerHttpClientPool();
 			} catch (Exception e) {
 				throw new RuntimeException(e);
 			}
@@ -111,24 +117,50 @@ public class PartnerXeroClient extends PublicXeroClient {
 
 	private static class PartnerHttpClientPool implements HttpClientPool {
 
-	    private HttpClient httpClient;
+		private final PoolingHttpClientConnectionManager clientConnectionManager;
 
-	    PartnerHttpClientPool(KeyStore entrustStore, char[] password)
-	        throws KeyManagementException,
-				NoSuchAlgorithmException,
-				KeyStoreException,
-				UnrecoverableKeyException {
+		private final CloseableHttpClient client;
 
-	        SSLContext sslcontext = SSLContexts.custom()
-	            .loadKeyMaterial(entrustStore, password)
-	            .build();
-	        httpClient = HttpClients.custom()
-	            .setSslcontext(sslcontext)
-	            .build();
-	    }
+		PartnerHttpClientPool() {
+			try {
+				SSLContext sslContext = SSLContext.getInstance("TLS");
+				KeyManagerFactory kmFactory = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
 
-	    public HttpClient getHttpClient(URL server) {
-	        return this.httpClient;
-	    }
+				kmFactory.init(entrustStore, keyStorePassword);
+
+				sslContext.init(kmFactory.getKeyManagers(), null, null);
+
+
+//				SSLSocketFactory sslSocketFactory = new SSLSocketFactory(sslContext);
+//
+//				Scheme partnerHttps = new Scheme("https", sslSocketFactory, 443);
+//				SchemeRegistry schemeRegistry = new SchemeRegistry();
+//				schemeRegistry.register(partnerHttps);
+
+
+				SSLConnectionSocketFactory sslConnectionFactory = new SSLConnectionSocketFactory(sslContext);
+
+				Registry<ConnectionSocketFactory> registry = RegistryBuilder.<ConnectionSocketFactory> create()
+						.register("https", sslConnectionFactory)
+						.register("http", new PlainConnectionSocketFactory())
+						.build();
+//
+				HttpClientBuilder builder = HttpClientBuilder.create();
+				builder.setSSLSocketFactory(sslConnectionFactory);
+				clientConnectionManager = new PoolingHttpClientConnectionManager(registry,null,null,null,5000, TimeUnit.MILLISECONDS);
+				clientConnectionManager.setDefaultMaxPerRoute(30);
+				builder.setConnectionManager(clientConnectionManager);
+
+				client = builder.build();
+
+			} catch (Exception e) {
+				throw new RuntimeException(e);
+			}
+		}
+
+		@Override
+		public HttpClient getHttpClient(URL url) {
+			return client;
+		}
 	}
 }

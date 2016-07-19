@@ -28,6 +28,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.concurrent.TimeUnit;
 
+import com.github.scribejava.core.model.OAuth1AccessToken;
 import com.github.scribejava.core.model.OAuth1RequestToken;
 import net.oauth.OAuth;
 import net.oauth.OAuthAccessor;
@@ -117,12 +118,11 @@ public class XeroClient {
     }
 
     public OAuth1RequestToken getRequestToken(String callbackUrl) throws OAuthException, IOException, URISyntaxException {
-        OAuthAccessor accessor = buildAccessor(callbackUrl);
-        Collection<OAuth.Parameter> parameters = new ArrayList<>();
-        //  Hmm, this seems stupid having to set it as a param (as it's in the accessor), but fails without it.
-        parameters.add(new OAuth.Parameter("oauth_callback",accessor.consumer.callbackURL));
-        getOAuthClient().getRequestToken(accessor,null,parameters);
-        return new OAuth1RequestToken(accessor.requestToken,accessor.tokenSecret);
+        throw new UnsupportedOperationException("This only makes sense for public or partner apps.");
+    }
+
+    public OAuth1AccessToken getAccessToken(String requestToken, String secret, String verifier) throws OAuthException, IOException, URISyntaxException {
+        throw new UnsupportedOperationException("This only makes sense for public or partner apps.");
     }
 
     public ArrayOfInvoice getInvoices() throws XeroClientUnexpectedException, OAuthProblemException {
@@ -439,7 +439,7 @@ public class XeroClient {
         this.privateKey = privateKey;
     }
 
-    private OAuthClient getOAuthClient() {
+    protected OAuthClient getOAuthClient() {
         HttpClient4 httpClient4 = new HttpClient4(getClientPool());
         OAuthClient oAuthClient = new OAuthClient(httpClient4);
         oAuthClient.getHttpParameters().put(net.oauth.http.HttpClient.READ_TIMEOUT, new Integer(5000));
@@ -453,27 +453,17 @@ public class XeroClient {
 
     // This is based on the HttpClient4 one used by the default constructor, but allowing overridding the con per route.
     // It's also been updated to use
-
-    protected static SingleClient getSingleClient() {
-        return new SingleClient();
-    }
-
-    private static class SingleClient implements HttpClientPool {
+    protected static class SingleClient implements HttpClientPool {
 
         private final CloseableHttpClient client;
 
-        public PoolingHttpClientConnectionManager getClientConnectionManager() {
-            return clientConnectionManager;
-        }
-
         private final PoolingHttpClientConnectionManager clientConnectionManager;
 
-
         // Bit lost with all of this, but this is the only way I've found to override the ConnPerRoute problem I was having.
-        SingleClient() {
+        private SingleClient() {
             clientConnectionManager = new PoolingHttpClientConnectionManager(5000,TimeUnit.MILLISECONDS);
             clientConnectionManager.setDefaultMaxPerRoute(30);
-            client = HttpClientBuilder.create().setConnectionManager(clientConnectionManager).build();
+            client = buildClient();
 //            client = new DefaultHttpClient(clientConnectionManager);
 
 //                if (!(clientConnectionManager instanceof ThreadSafeClientConnManager)) {
@@ -484,18 +474,27 @@ public class XeroClient {
 //                                    new ConnPerRouteBean(20)
 //                            ), params);
 //                }
-            }
+        }
+
+        public PoolingHttpClientConnectionManager getClientConnectionManager() {
+            return clientConnectionManager;
+        }
+
+        protected CloseableHttpClient buildClient() {
+            return HttpClientBuilder.create().setConnectionManager(getClientConnectionManager()).build();
+        }
 
 
-            public void closeExpiredConnections() {
+        public void closeExpiredConnections() {
                 clientConnectionManager.closeExpiredConnections();
             }
 
-            public HttpClient getHttpClient(URL server) {
-                // May as well clean up expired connections.  Make sure to be logging org.apache.http on debug to see them getting cleaned up
-                // Turned this off, looks like they are meant to stay persistent for performance reasons.
+        @Override
+        public HttpClient getHttpClient(URL server) {
+            // May as well clean up expired connections.  Make sure to be logging org.apache.http on debug to see them getting cleaned up
+            // Turned this off, looks like they are meant to stay persistent for performance reasons.
 //                clientConnectionManager.closeExpiredConnections();
-                return client;
-            }
+            return client;
         }
+    }
 }
