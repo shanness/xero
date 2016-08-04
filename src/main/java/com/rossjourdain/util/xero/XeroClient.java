@@ -24,6 +24,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.concurrent.TimeUnit;
@@ -42,6 +43,7 @@ import net.oauth.client.httpclient4.HttpClient4;
 import net.oauth.client.httpclient4.HttpClientPool;
 import net.oauth.http.HttpResponseMessage;
 import net.oauth.signature.RSA_SHA1;
+import org.apache.commons.httpclient.util.URIUtil;
 import org.apache.http.client.HttpClient;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
@@ -143,16 +145,38 @@ public class XeroClient {
     }
 
     public Invoice getInvoice(String invoiceId) throws XeroClientUnexpectedException, OAuthProblemException {
+        ArrayOfInvoice arrayOfInvoice = getInvoiceWithExtraInfo("/" + invoiceId);
+        if ( arrayOfInvoice.getInvoice().size() != 1 ) {
+            throw new XeroClientUnexpectedException("Should have had 1 invoice for id[" + invoiceId + "] - Instead have[" + arrayOfInvoice.getInvoice().size() + "]",new IllegalStateException());
+        }
+        return arrayOfInvoice.getInvoice().get(0);
+    }
+
+    /**
+     * This should be unique per invoice (excluding ones you might VOID).  Useful as a unique key for recovery after POSTING an invoice but not getting a reply.
+     *
+     * @see Invoice#setUrl(String)
+     *
+     * @return A
+     */
+    public ArrayOfInvoice getInvoiceByUrl(String url) throws XeroClientUnexpectedException, OAuthProblemException {
+        ArrayOfInvoice arrayOfInvoice = getInvoiceWithExtraInfo("?where=Url==\"" + url + "\"");
+        if ( arrayOfInvoice == null ) return new ArrayOfInvoice();
+        return arrayOfInvoice;
+    }
+
+    /**
+     * @param extraInfo Extra information added to the url.  Do not url encode this, it's done internally.
+     */
+    private ArrayOfInvoice getInvoiceWithExtraInfo(String extraInfo) throws XeroClientUnexpectedException, OAuthProblemException {
         ArrayOfInvoice arrayOfInvoice = null;
         try {
             OAuthClient client = getOAuthClient();
             OAuthAccessor accessor = buildAccessor();
-            OAuthMessage response = client.invoke(accessor, OAuthMessage.GET, getEndpointUrl() + "Invoices" + "/" + invoiceId, null);
+
+            OAuthMessage response = client.invoke(accessor, OAuthMessage.GET, getEndpointUrl() + "Invoices" + URIUtil.encodeQuery(extraInfo), null);
             arrayOfInvoice = XeroXmlManager.fromXml(response.getBodyAsStream()).getInvoices();
-            if ( arrayOfInvoice.getInvoice().size() != 1 ) {
-                throw new XeroClientUnexpectedException("Should have had 1 invoice for id[" + invoiceId + "] - Instead have[" + arrayOfInvoice.getInvoice().size() + "]",new IllegalStateException());
-            }
-            return arrayOfInvoice.getInvoice().get(0);
+            return arrayOfInvoice;
         } catch (OAuthProblemException ex) {
             throw ex;
         } catch (Exception ex) {
